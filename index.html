@@ -954,8 +954,8 @@ async function exportar(tipo, lista, base){
     if (typeof JSZip === 'undefined') { toast('El módulo de Excel no cargó. Abre la app con conexión e intenta de nuevo.'); return; }
     const arb = ordenar(lista).flatMap(filasArboles);
     const out = await xlsxSimple([
-      { nombre: 'Parcelas', filas: ordenar(lista).map(filaParcela), anchos: [8,11,11,13,13,9,8,12,13,10,15,16,20,14], miles: ['D', 'E'] },
-      { nombre: 'Árboles', filas: arb.length ? arb : [{ 'Rodal': '', 'N° parcela': '', 'N° árbol': '' }], anchos: [8,11,9,28,22,30,15,9,18,10,16,15,9,22,40] }
+      { nombre: 'Parcelas', filas: ordenar(lista).map(filaParcela), anchos: [8,11,11,13,13,9,8,12,13,10,11,15,16,20,14], miles: ['D', 'E'] },
+      { nombre: 'Árboles', filas: arb.length ? arb : [{ 'Rodal': '', 'N° parcela': '', 'N° árbol': '' }], anchos: [8,11,9,28,22,30,15,9,18,11,22,10,16,15,9,22,40] }
     ]);
     await guardarArchivo(base + '.xlsx', out);
   } else {
