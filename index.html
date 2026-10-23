@@ -1038,7 +1038,7 @@ const App = {
     $('#pRodal').value = p.rodal || ''; $('#pNumero').value = p.numero || ''; $('#pFecha').value = p.fecha || '';
     $('#pEste').value = miles(p.este); $('#pNorte').value = miles(p.norte);
     $('#pForma').value = p.forma || 'circular'; $('#pSup').value = inVal(p.superficie, 1);
-    $('#gpsMsg').hidden = true; this.ultimaGeo = null;
+    this.gpsStop(); $('#gpsMsg').hidden = true; this.ultimaGeo = null;
     this.renderUTM(); this.renderStats(); this.renderArboles();
   },
   renderUTM(){
@@ -1091,16 +1091,48 @@ const App = {
     this.ultimaGeo = { lat, lon };
     const m = $('#gpsMsg'); m.textContent = msg; m.hidden = false;
   },
+  // GPS del teléfono: sigue la señal en vivo y guarda la mejor lectura. Se fija sola al llegar a ±5 m
+  // o a los 90 s; tocar el botón mientras busca fija la mejor lectura obtenida hasta ese momento.
   gps(){
-    const m = $('#gpsMsg');
-    const fail = () => { m.textContent = 'El GPS no está disponible en esta vista. Escribe el Este y el Norte (por ejemplo, desde tu GPS de mano) o usa “Leer desde foto”.'; m.hidden = false; };
-    if (!navigator.geolocation) return fail();
-    m.textContent = 'Buscando señal GPS…'; m.hidden = false;
+    if (this._gps) return this.gpsFijar();
+    const m = $('#gpsMsg'), b = $('#btnGPS'), show = t => { m.textContent = t; m.hidden = false; };
+    if (!window.isSecureContext) return show('El GPS solo funciona si la app se abre desde https (o instalada desde ese enlace). Escribe el Este y el Norte o usa “Leer desde foto”.');
+    if (!navigator.geolocation) return show('Este navegador no da acceso al GPS. Escribe el Este y el Norte (por ejemplo, desde tu GPS de mano) o usa “Leer desde foto”.');
+    const g = this._gps = { best: null, t0: Date.now() };
+    show('Buscando señal GPS… quédate quieto en el centro de la parcela, con cielo despejado si es posible.');
+    b.textContent = 'Fijar posición';
+    const fail = err => {
+      if (this._gps !== g) return;
+      if (g.best) return this.gpsFijar();
+      this.gpsStop();
+      show(err && err.code === 1
+        ? 'No hay permiso para usar la ubicación. Actívalo en los ajustes del navegador para este sitio (y la ubicación del teléfono), y vuelve a tocar “Usar GPS”.'
+        : 'No se obtuvo señal GPS. Revisa que la ubicación del teléfono esté activada, muévete a un lugar más despejado y vuelve a intentar, o escribe el Este y el Norte.');
+    };
     try {
-      navigator.geolocation.getCurrentPosition(
-        pos => this.setCoords(pos.coords.latitude, pos.coords.longitude, `Coordenadas del GPS (precisión ± ${Math.round(pos.coords.accuracy)} m).`),
-        fail, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+      g.watch = navigator.geolocation.watchPosition(pos => {
+        if (this._gps !== g) return;
+        const c = pos.coords;
+        if (!g.best || c.accuracy <= g.best.acc) g.best = { lat: c.latitude, lon: c.longitude, acc: c.accuracy };
+        const s = Math.round((Date.now() - g.t0) / 1000);
+        show(`Señal GPS: ± ${Math.round(c.accuracy)} m ahora · mejor ± ${Math.round(g.best.acc)} m (${s} s). Toca “Fijar posición” para usar la mejor lectura.`);
+        b.textContent = `Fijar (± ${Math.round(g.best.acc)} m)`;
+        if (g.best.acc <= 5) this.gpsFijar();
+      }, fail, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
+      g.tope = setTimeout(() => this._gps === g && (g.best ? this.gpsFijar() : fail()), 90000);
     } catch(e) { fail(); }
+  },
+  gpsFijar(){
+    const g = this._gps; if (!g) return;
+    this.gpsStop();
+    if (!g.best) { const m = $('#gpsMsg'); m.textContent = 'Todavía no hay señal GPS. Vuelve a tocar “Usar GPS” y espera unos segundos.'; m.hidden = false; return; }
+    this.setCoords(g.best.lat, g.best.lon, `Coordenadas del GPS del teléfono (precisión ± ${Math.round(g.best.acc)} m).`);
+  },
+  gpsStop(){
+    const g = this._gps; if (!g) return;
+    this._gps = null; clearTimeout(g.tope);
+    if (g.watch != null) navigator.geolocation.clearWatch(g.watch);
+    $('#btnGPS').textContent = 'Usar GPS';
   },
   async exifFile(file){
     const m = $('#gpsMsg');
