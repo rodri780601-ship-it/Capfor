@@ -53,6 +53,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   display:flex;align-items:center;gap:10px;min-height:56px;padding-block:6px;padding-left:var(--gutter-l);padding-right:var(--gutter-r)}
 .bar-title{font-family:var(--f-display);font-weight:700;font-size:1.15rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .back{border:0;background:none;padding:8px 6px 8px 0;font-weight:600;color:var(--accent);font-size:1rem;cursor:pointer;min-height:44px}
+.back.home{min-width:44px;padding:8px;display:inline-flex;align-items:center;justify-content:center}
 .chip{font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .chip.ok{color:var(--ok)} .chip.pend{color:var(--warn)} .chip.sync{color:var(--accent)}
@@ -180,6 +181,7 @@ textarea.inp{min-height:84px;resize:vertical}
 
 <header class="bar">
   <button class="back" id="btnBack" hidden>‹ Volver</button>
+  <button class="back home" id="btnInicio" hidden aria-label="Ir al inicio" title="Ir al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg></button>
   <div class="bar-title" id="barTitle">Parcelas de muestreo</div>
   <span class="chip" id="cloudChip">En este teléfono</span>
 </header>
@@ -406,7 +408,7 @@ textarea.inp{min-height:84px;resize:vertical}
 </div>
 <input type="file" id="fileMeasure" accept="image/*" hidden>
 
-<div class="dlg" id="dlg" hidden><div class="card"><div id="dlgMsg"></div><div class="row"><button class="btn wide" id="dlgNo">Cancelar</button><button class="btn primary wide" id="dlgYes">Eliminar</button></div></div></div>
+<div class="dlg" id="dlg" hidden><div class="card"><div id="dlgMsg"></div><div class="row"><button class="btn wide" id="dlgNo">Cancelar</button><button class="btn wide" id="dlgAlt" hidden></button><button class="btn primary wide" id="dlgYes">Eliminar</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="jszip.min.js"></script>
@@ -1041,9 +1043,12 @@ async function exportar(tipo, lista, base){
 }
 
 /* ---------- confirmación ---------- */
-function confirmar(html, si, fn){
+// `alt` (opcional): tercer botón { texto, fn }, p. ej. "Salir sin guardar".
+function confirmar(html, si, fn, alt){
   $('#dlgMsg').innerHTML = html; $('#dlgYes').textContent = si; $('#dlg').hidden = false;
   $('#dlgYes').onclick = () => { $('#dlg').hidden = true; fn(); };
+  $('#dlgAlt').hidden = !alt;
+  if (alt) { $('#dlgAlt').textContent = alt.texto; $('#dlgAlt').onclick = () => { $('#dlg').hidden = true; alt.fn(); }; }
   $('#dlgNo').onclick = () => { $('#dlg').hidden = true; };
 }
 
@@ -1093,11 +1098,30 @@ const App = {
   },
 
   async persist(p){ p.updatedAt = Date.now(); await Store.put(p); Cloud.mark(p.id); },
+  // Guardado diferido de los campos que se guardan al escribir; guardarPendientes() lo adelanta antes de cambiar de vista.
+  pend: {},
+  diferir(k, rec){
+    if (this.pend[k]) clearTimeout(this.pend[k].t);
+    this.pend[k] = { rec, t: setTimeout(() => { delete this.pend[k]; this.persist(rec); }, 400) };
+  },
+  async guardarPendientes(){
+    for (const k of Object.keys(this.pend)) { const x = this.pend[k]; clearTimeout(x.t); delete this.pend[k]; await this.persist(x.rec); }
+  },
+  // Navegación con aviso: si el formulario del árbol tiene cambios sin guardar, pregunta antes de salir.
+  async irA(v){
+    if (this.view === 'arbol' && this.draft && this.firmaArbol() !== this.firma0) {
+      confirmar(`<h3>Hay datos del árbol sin guardar</h3><p class="fine">Guarda el árbol N° ${esc($('#aNum').value || '—')} antes de salir, o se perderán los cambios.</p>`,
+        'Guardar y salir', () => this.guardarArbol(false, v), { texto: 'Salir sin guardar', fn: () => this.show(v) });
+      return;
+    }
+    await this.guardarPendientes();
+    this.show(v);
+  },
 
   show(v){
     this.view = v;
     $('#vInicio').hidden = v !== 'inicio'; $('#vPredio').hidden = v !== 'predio'; $('#vParcela').hidden = v !== 'parcela'; $('#vArbol').hidden = v !== 'arbol';
-    $('#btnBack').hidden = v === 'inicio';
+    $('#btnBack').hidden = v === 'inicio'; $('#btnInicio').hidden = v === 'inicio' || v === 'predio';
     const p = this.parcela();
     $('#barTitle').textContent = v === 'inicio' ? 'Parcelas de muestreo' : v === 'predio' ? tituloPredio(this.predio()) : v === 'parcela' ? tituloParcela(p)
       : (this.draft && this.draft.isNew ? 'Nuevo árbol' : 'Árbol N° ' + (this.draft ? this.draft.n : ''));
@@ -1156,7 +1180,7 @@ const App = {
     if (k === 'provincia') f.comuna = '';
     if (k === 'region' || k === 'provincia') this.renderTerritorio();
     if (k === 'nombre') $('#barTitle').textContent = tituloPredio(f);
-    clearTimeout(this._ft); this._ft = setTimeout(() => this.persist(f), 400);
+    this.diferir('predio', f);
   },
 
   /* ----- parcelas del predio ----- */
@@ -1240,7 +1264,7 @@ const App = {
     if (f === 'rodal') { this.settings.rodal = p.rodal; this.saveSettings(); }
     if (f === 'este' || f === 'norte') this.renderUTM();
     this.renderStats();
-    clearTimeout(this._pt); this._pt = setTimeout(() => this.persist(p), 400);
+    this.diferir('parcela', p);
   },
   async setCoords(lat, lon, msg){
     const p = this.parcela(), huso = p.huso || Calc.husoNatural(lon), u = Calc.utm(lat, lon, huso);
@@ -1323,7 +1347,12 @@ const App = {
     $('#btnDelArbol').hidden = d.isNew;
     this.renderEspecieBtn(); this.renderMetodos(); this.renderEstado(); this.renderExtraer(); this.renderVastagos();
     await this.renderFoto();
+    this.firma0 = this.firmaArbol();
     this.show('arbol');
+  },
+  firmaArbol(){
+    const d = this.draft;
+    return JSON.stringify([$('#aNum').value, $('#aDap').value, $('#aAlt').value, $('#aObs').value, d.especie, d.estado, d.extraer, d.vastagos, !!d.fotoBlob, d.fotoQuitada]);
   },
   renderEspecieBtn(){
     const e = SP[this.draft.especie];
@@ -1364,7 +1393,7 @@ const App = {
     res.innerHTML = `Altura calculada <b class="num">${fmt(H, 1)} m</b> (copiada al campo Altura)`;
     if (!silent) this.setAlt(H, 'Clinómetro (' + (this.clinoU === '%' ? '%' : 'grados') + ')');
   },
-  async guardarArbol(siguiente){
+  async guardarArbol(siguiente, destino){
     const p = this.parcela(), d = this.draft;
     const n = parseInt($('#aNum').value, 10);
     if (!isFinite(n) || n < 1) { toast('Ingresa el número del árbol'); $('#aNum').focus(); return; }
@@ -1386,7 +1415,7 @@ const App = {
     await this.persist(p);
     toast('Árbol N° ' + n + ' guardado');
     if (siguiente) { await this.abrirArbol(null); $('#aEspecie').focus(); }
-    else this.show('parcela');
+    else this.show(destino || 'parcela');
   },
 
   /* ----- selector de especie ----- */
@@ -1410,7 +1439,8 @@ const App = {
 
   /* ----- eventos ----- */
   bind(){
-    $('#btnBack').onclick = () => this.show({ arbol: 'parcela', parcela: 'predio' }[this.view] || 'inicio');
+    $('#btnBack').onclick = () => this.irA({ arbol: 'parcela', parcela: 'predio' }[this.view] || 'inicio');
+    $('#btnInicio').onclick = () => this.irA('inicio');
     $('#btnNuevoPredio').onclick = () => this.nuevoPredio();
     $('#listaPredios').onclick = e => {
       const c = e.target.closest('[data-fid]'); if (c) { this.predioCur = c.dataset.fid; this.show('predio'); return; }
