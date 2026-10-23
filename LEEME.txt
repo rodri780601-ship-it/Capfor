@@ -1,0 +1,88 @@
+PARCELAS DE MUESTREO FORESTAL · Versión instalable para Android
+=====================================================================
+
+Esta carpeta es la app completa. Hay que alojarla en una dirección web
+con https (una sola vez) y luego instalarla desde Chrome en el teléfono.
+
+Archivos (súbelos todos, sin carpetas intermedias):
+  index.html, sw.js, manifest.webmanifest, jszip.min.js,
+  icono-192.png, icono-512.png, icono-maskable-512.png
+
+
+PASO 1 · Publicar la app con GitHub Pages (gratis, desde el computador)
+-----------------------------------------------------------------------
+1. Crea una cuenta en https://github.com (si no tienes).
+2. Arriba a la derecha: "+" → "New repository".
+   - Repository name: parcelas
+   - Público ("Public"). GitHub Pages gratis requiere repositorio público.
+     Solo se publica el código de la app; los datos de terreno nunca salen
+     del teléfono.
+   - Presiona "Create repository".
+3. En la página del repositorio: "uploading an existing file"
+   (o "Add file" → "Upload files").
+4. Arrastra TODOS los archivos de esta carpeta (no la carpeta) y
+   presiona "Commit changes".
+5. Ve a "Settings" → "Pages" (menú izquierdo).
+   - Source: "Deploy from a branch"
+   - Branch: "main" y carpeta "/ (root)" → "Save".
+6. Espera 1 a 2 minutos y recarga esa página. Aparecerá la dirección:
+       https://TU-USUARIO.github.io/parcelas/
+   Ábrela en el computador para comprobar que carga.
+
+
+PASO 2 · Instalar en el Motorola Edge 60 Fusion
+-----------------------------------------------
+1. Con conexión, abre Chrome en el teléfono y entra a
+       https://TU-USUARIO.github.io/parcelas/
+2. Espera que cargue por completo (unos segundos).
+3. Menú ⋮ (arriba a la derecha) → "Instalar app"
+   (en algunas versiones dice "Agregar a la pantalla principal" →
+   "Instalar").
+4. Aparece el ícono "Parcelas" junto a tus apps. Ábrela desde ahí:
+   se ve a pantalla completa, sin barra de Chrome.
+5. Prueba sin señal: activa el modo avión y abre la app. Debe abrir
+   igual y guardar árboles.
+6. La primera vez que toques "Usar GPS", acepta el permiso de ubicación.
+
+
+PASO 3 (opcional) · Generar un archivo .apk
+-------------------------------------------
+Útil para instalarla en otros teléfonos sin pasar por Chrome.
+1. En el computador entra a https://www.pwabuilder.com
+2. Pega la dirección https://TU-USUARIO.github.io/parcelas/ y presiona
+   "Start".
+3. "Package For Stores" → "Android" → "Generate Package" → "Download".
+4. Descomprime el ZIP descargado. Contiene un archivo .apk.
+5. Copia el .apk al teléfono (cable USB, Drive o correo), ábrelo y
+   permite "Instalar apps desconocidas" para el administrador de
+   archivos cuando el teléfono lo pida.
+Nota: el .apk sigue cargando la app desde la dirección de GitHub, así
+que el Paso 1 debe seguir publicado. Para subirla a Google Play se
+necesita además una cuenta de desarrollador (pago único) y la
+verificación del dominio que PWABuilder indica en su guía.
+
+
+ACTUALIZAR LA APP
+-----------------
+Sube los archivos nuevos al mismo repositorio (reemplazan a los
+anteriores). El teléfono descarga la versión nueva la próxima vez que
+abras la app con señal, y la aplica al abrirla otra vez. Los datos
+guardados no se pierden al actualizar.
+
+
+CUIDADO CON LOS DATOS
+---------------------
+- Los datos quedan guardados solo en el teléfono. Esta versión NO tiene
+  el respaldo en la nube de la versión que se abre dentro de Claude.
+- Si desinstalas la app o borras los datos de Chrome
+  (Ajustes → Apps → Chrome → Almacenamiento → Borrar datos),
+  se pierden las parcelas que no hayas exportado.
+- Exporta la "Plantilla de inventario", la "Planilla completa" y las
+  "Fotos (ZIP)" al final de cada jornada. Los archivos quedan en la
+  carpeta Descargas del teléfono.
+- Las parcelas guardadas en la versión de Claude no se traspasan solas
+  a esta versión (son almacenamientos distintos). Exporta allá y sigue
+  trabajando acá.
+
+
+Incluye JSZip (licencia MIT/GPLv3, ver jszip-LICENCIA.md).

@@ -1,0 +1,32 @@
+{
+  "name": "Parcelas de Muestreo Forestal",
+  "short_name": "Parcelas",
+  "description": "Registro de parcelas de inventario forestal: especie (D.S. 68/2009), DAP, altura, estado sanitario y foto.",
+  "lang": "es-CL",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F6F1",
+  "theme_color": "#2E5C3A",
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
