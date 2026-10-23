@@ -180,8 +180,8 @@ textarea.inp{min-height:84px;resize:vertical}
 </style>
 
 <header class="bar">
+  <button class="back home" id="btnInicio" aria-label="Ir al inicio" title="Ir al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg></button>
   <button class="back" id="btnBack" hidden>‹ Volver</button>
-  <button class="back home" id="btnInicio" hidden aria-label="Ir al inicio" title="Ir al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg></button>
   <div class="bar-title" id="barTitle">Parcelas de muestreo</div>
   <span class="chip" id="cloudChip">En este teléfono</span>
 </header>
@@ -1121,7 +1121,8 @@ const App = {
   show(v){
     this.view = v;
     $('#vInicio').hidden = v !== 'inicio'; $('#vPredio').hidden = v !== 'predio'; $('#vParcela').hidden = v !== 'parcela'; $('#vArbol').hidden = v !== 'arbol';
-    $('#btnBack').hidden = v === 'inicio'; $('#btnInicio').hidden = v === 'inicio' || v === 'predio';
+    $('#btnBack').hidden = v === 'inicio';
+    if (v === 'inicio') $('#btnInicio').setAttribute('aria-current', 'page'); else $('#btnInicio').removeAttribute('aria-current');
     const p = this.parcela();
     $('#barTitle').textContent = v === 'inicio' ? 'Parcelas de muestreo' : v === 'predio' ? tituloPredio(this.predio()) : v === 'parcela' ? tituloParcela(p)
       : (this.draft && this.draft.isNew ? 'Nuevo árbol' : 'Árbol N° ' + (this.draft ? this.draft.n : ''));
