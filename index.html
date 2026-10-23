@@ -80,6 +80,8 @@ section.view{display:flex;flex-direction:column;gap:18px;padding-bottom:28px}
 .pcard .pmeta{color:var(--muted);font-size:.9rem}
 .pcard .pstats{display:flex;gap:14px;flex-wrap:wrap;font-size:.95rem}
 .pcard .pstats b{font-weight:600}
+.fcard{grid-template-columns:1fr}
+.fcard .fn{font-family:var(--f-display);font-weight:700;font-size:1.25rem;line-height:1.2;color:var(--accent);overflow-wrap:anywhere}
 .empty{padding:22px;border:1.5px dashed var(--line);border-radius:var(--r);display:flex;flex-direction:column;gap:10px}
 .empty ol{margin:0;padding-left:1.2em;color:var(--muted)}
 
@@ -183,15 +185,36 @@ textarea.inp{min-height:84px;resize:vertical}
 </header>
 
 <main>
-  <!-- LISTA DE PARCELAS -->
-  <section class="view" id="vList">
+  <!-- INICIO: FICHAS PREDIALES -->
+  <section class="view" id="vInicio">
     <div class="spread">
-      <div><div class="eyebrow">Inventario forestal</div><h1>Parcelas</h1></div>
+      <div><div class="eyebrow">Inventario forestal</div><h1>Predios</h1></div>
+      <button class="btn primary" id="btnNuevoPredio">+ Nueva ficha predial</button>
+    </div>
+    <div id="listaPredios" class="plist"></div>
+    <p class="fine" id="storageNote">Los datos se guardan en este teléfono. Exporta a Excel al terminar cada jornada.</p>
+  </section>
+
+  <!-- FICHA PREDIAL Y SUS PARCELAS -->
+  <section class="view" id="vPredio" hidden>
+    <div class="card panel">
+      <div class="spread"><h2>Ficha predial</h2><span class="fine">Se guarda al escribir</span></div>
+      <div class="field"><label for="fNombre">Nombre del predio</label><input class="inp big" id="fNombre" data-pf="nombre" autocomplete="off"></div>
+      <div class="field"><label for="fRol">Rol de avalúo</label><input class="inp" id="fRol" data-pf="rol" autocomplete="off" placeholder="123-45"></div>
+      <div class="field"><label for="fRegion">Región</label><select class="inp" id="fRegion" data-pf="region"></select></div>
+      <div class="grid2">
+        <div class="field"><label for="fProvincia">Provincia</label><select class="inp" id="fProvincia" data-pf="provincia"></select></div>
+        <div class="field"><label for="fComuna">Comuna</label><select class="inp" id="fComuna" data-pf="comuna"></select></div>
+      </div>
+      <div class="field"><label for="fPropietario">Nombre del propietario</label><input class="inp" id="fPropietario" data-pf="propietario" autocomplete="off"></div>
+    </div>
+    <div class="spread">
+      <h2>Parcelas</h2>
       <button class="btn primary" id="btnNuevaParcela">+ Nueva parcela</button>
     </div>
     <div id="listaParcelas" class="plist"></div>
     <div class="card panel" id="exportAll" hidden>
-      <h3>Exportar todas las parcelas</h3>
+      <h3>Exportar las parcelas del predio</h3>
       <p class="fine">La plantilla de inventario sigue el formato de la hoja “Inventario” (Rodal, Parcela, Árbol, Tipo, Especie, Dap, Extraer). La planilla completa agrega coordenadas, altura, estado sanitario, fotos y observaciones.</p>
       <div class="row">
         <button class="btn primary wide" data-export="plantilla" data-scope="all">Plantilla de inventario</button>
@@ -199,7 +222,7 @@ textarea.inp{min-height:84px;resize:vertical}
         <button class="btn wide" data-export="zip" data-scope="all">Fotos (ZIP)</button>
       </div>
     </div>
-    <p class="fine" id="storageNote">Los datos se guardan en este teléfono. Exporta a Excel al terminar cada jornada.</p>
+    <button class="btn danger" id="btnDelPredio">Eliminar ficha predial</button>
   </section>
 
   <!-- DETALLE DE PARCELA -->
@@ -654,6 +677,48 @@ const safeName = s => String(s || 'sin-numero').replace(/[^\w\-]+/g, '_');
 function toast(t){ const el = $('#toast'); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => el.hidden = true, 2600); }
 const LS = { get(k, d){ try { const v = localStorage.getItem('pf_' + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem('pf_' + k, JSON.stringify(v)); } catch(e){} } };
 
+/* ---------- división político-administrativa (16 regiones, 56 provincias, 346 comunas) ---------- */
+const TERRITORIO = {
+  "Arica y Parinacota": { "Arica": ["Arica", "Camarones"], "Parinacota": ["Putre", "General Lagos"] },
+  "Tarapacá": { "Iquique": ["Iquique", "Alto Hospicio"], "Tamarugal": ["Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"] },
+  "Antofagasta": { "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal"], "El Loa": ["Calama", "Ollagüe", "San Pedro de Atacama"], "Tocopilla": ["Tocopilla", "María Elena"] },
+  "Atacama": { "Copiapó": ["Copiapó", "Caldera", "Tierra Amarilla"], "Chañaral": ["Chañaral", "Diego de Almagro"], "Huasco": ["Vallenar", "Alto del Carmen", "Freirina", "Huasco"] },
+  "Coquimbo": { "Elqui": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña"], "Choapa": ["Illapel", "Canela", "Los Vilos", "Salamanca"],
+    "Limarí": ["Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"] },
+  "Valparaíso": { "Valparaíso": ["Valparaíso", "Casablanca", "Concón", "Juan Fernández", "Puchuncaví", "Quintero", "Viña del Mar"], "Isla de Pascua": ["Isla de Pascua"],
+    "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"], "Petorca": ["La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+    "Quillota": ["Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales"], "San Antonio": ["San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo"],
+    "San Felipe de Aconcagua": ["San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María"], "Marga Marga": ["Quilpué", "Limache", "Olmué", "Villa Alemana"] },
+  "Metropolitana de Santiago": { "Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna",
+      "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén",
+      "Providencia", "Pudahuel", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura"],
+    "Cordillera": ["Puente Alto", "Pirque", "San José de Maipo"], "Chacabuco": ["Colina", "Lampa", "Tiltil"], "Maipo": ["San Bernardo", "Buin", "Calera de Tango", "Paine"],
+    "Melipilla": ["Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro"], "Talagante": ["Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"] },
+  "Libertador General Bernardo O'Higgins": { "Cachapoal": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal",
+      "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente"],
+    "Cardenal Caro": ["Pichilemu", "La Estrella", "Litueche", "Marchigüe", "Navidad", "Paredones"],
+    "Colchagua": ["San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"] },
+  "Maule": { "Talca": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael"],
+    "Cauquenes": ["Cauquenes", "Chanco", "Pelluhue"], "Curicó": ["Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén"],
+    "Linares": ["Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"] },
+  "Ñuble": { "Diguillín": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"],
+    "Itata": ["Quirihue", "Cobquecura", "Coelemu", "Ninhue", "Portezuelo", "Ránquil", "Treguaco"], "Punilla": ["San Carlos", "Coihueco", "Ñiquén", "San Fabián", "San Nicolás"] },
+  "Biobío": { "Concepción": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé", "Hualpén"],
+    "Arauco": ["Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa"],
+    "Biobío": ["Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"] },
+  "La Araucanía": { "Cautín": ["Temuco", "Carahue", "Cholchol", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial",
+      "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica"],
+    "Malleco": ["Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"] },
+  "Los Ríos": { "Valdivia": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli"], "Ranco": ["La Unión", "Futrono", "Lago Ranco", "Río Bueno"] },
+  "Los Lagos": { "Llanquihue": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas"],
+    "Chiloé": ["Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao"],
+    "Osorno": ["Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo"], "Palena": ["Chaitén", "Futaleufú", "Hualaihué", "Palena"] },
+  "Aysén del General Carlos Ibáñez del Campo": { "Coyhaique": ["Coyhaique", "Lago Verde"], "Aysén": ["Aysén", "Cisnes", "Guaitecas"],
+    "Capitán Prat": ["Cochrane", "O'Higgins", "Tortel"], "General Carrera": ["Chile Chico", "Río Ibáñez"] },
+  "Magallanes y de la Antártica Chilena": { "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"], "Antártica Chilena": ["Cabo de Hornos", "Antártica"],
+    "Tierra del Fuego": ["Porvenir", "Primavera", "Timaukel"], "Última Esperanza": ["Natales", "Torres del Paine"] }
+};
+
 /* ---------- especies ---------- */
 const ESPECIES = ESPECIES_RAW.map(e => ({ sci:e[0], aut:e[1], comun:e[2], arb:!!e[3], key:norm(e[0] + ' ' + e[2]) }));
 const SP = Object.fromEntries(ESPECIES.map(e => [e.sci, e]));
@@ -793,16 +858,17 @@ const Cloud = {
     const snap = await this.col.get();
     let changed = false;
     for (const d of snap.docs) {
-      const body = d.data(); if (!body || body.tipo !== 'parcela' || this.deleted.has(body.id)) continue;
-      const local = App.parcelas.find(p => p.id === body.id);
+      const body = d.data(); if (!body || !['parcela', 'predio'].includes(body.tipo) || this.deleted.has(body.id)) continue;
+      const lista = body.tipo === 'predio' ? App.predios : App.parcelas;
+      const local = lista.find(p => p.id === body.id);
       if (!local || (body.updatedAt || 0) > (local.updatedAt || 0)) {
-        const p = JSON.parse(JSON.stringify(body)); delete p.tipo;
+        const p = JSON.parse(JSON.stringify(body)); if (p.tipo === 'parcela') delete p.tipo;   // las fichas prediales conservan tipo: 'predio'
         await Store.put(p);
-        if (local) Object.assign(local, p); else App.parcelas.push(p);
+        if (local) Object.assign(local, p); else lista.push(p);
         changed = true;
       }
     }
-    if (changed) App.refresh();
+    if (changed) { await App.asignarHuerfanas(); App.refresh(); }
   },
   mark(id){ this.dirty.add(id); this.persist(); clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 1500); },
   markDeleted(id){ this.dirty.delete(id); this.deleted.add(id); this.persist(); clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 800); },
@@ -815,7 +881,7 @@ const Cloud = {
       try { await this.col.doc(id).delete(); this.deleted.delete(id); } catch(e) { fail = true; }
     }
     for (const id of [...this.dirty]) {
-      const p = App.parcelas.find(x => x.id === id);
+      const p = App.registro(id);
       if (!p) { this.dirty.delete(id); continue; }
       try { await this.col.doc(id).set(Object.assign({ tipo: 'parcela' }, JSON.parse(JSON.stringify(p)))); this.dirty.delete(id); }
       catch(e) { fail = true; if (e && e.code === 'quota_exceeded') toast('El respaldo en la nube está lleno. Exporta y elimina parcelas antiguas.'); }
@@ -953,7 +1019,10 @@ async function exportar(tipo, lista, base){
   if (tipo === 'xlsx') {
     if (typeof JSZip === 'undefined') { toast('El módulo de Excel no cargó. Abre la app con conexión e intenta de nuevo.'); return; }
     const arb = ordenar(lista).flatMap(filasArboles);
+    const fichas = App.predios.filter(f => lista.some(p => p.predioId === f.id)).map(f => ({
+      'Nombre del predio': f.nombre || '', 'Rol de avalúo': f.rol || '', 'Comuna': f.comuna || '', 'Provincia': f.provincia || '', 'Región': f.region || '', 'Propietario': f.propietario || '' }));
     const out = await xlsxSimple([
+      { nombre: 'Ficha predial', filas: fichas, anchos: [30,14,18,18,30,30] },
       { nombre: 'Parcelas', filas: ordenar(lista).map(filaParcela), anchos: [8,11,11,13,13,9,8,12,13,10,11,15,16,20,14], miles: ['D', 'E'] },
       { nombre: 'Árboles', filas: arb.length ? arb : [{ 'Rodal': '', 'N° parcela': '', 'N° árbol': '' }], anchos: [8,11,9,28,22,30,15,9,18,11,22,10,16,15,9,22,40] }
     ]);
@@ -980,16 +1049,22 @@ function confirmar(html, si, fn){
 
 /* ---------- aplicación ---------- */
 const tituloParcela = p => (p && p.rodal ? 'Rodal ' + p.rodal + ' · ' : '') + 'Parcela ' + (p && p.numero ? p.numero : 'sin número');
+const tituloPredio = f => (f && f.nombre ? f.nombre : 'Predio sin nombre');
 const App = {
-  parcelas: [], cur: null, draft: null, view: 'list',
+  predios: [], parcelas: [], predioCur: null, cur: null, draft: null, view: 'inicio',
   settings: Object.assign({ refAncho: 30, distCam: 2, jalon: 2, clinoU: '%', clinoD: '', huso: 18 }, LS.get('settings', {})),
   saveSettings(){ LS.set('settings', this.settings); },
   parcela(){ return this.parcelas.find(p => p.id === this.cur); },
+  predio(){ return this.predios.find(f => f.id === this.predioCur); },
+  parcelasPredio(){ return this.parcelas.filter(p => p.predioId === this.predioCur); },
+  registro(id){ return this.parcelas.find(x => x.id === id) || this.predios.find(x => x.id === id); },
 
   async init(){
     const ok = await Store.open();
     if (!ok) $('#storageNote').textContent = 'Este navegador no permite guardar datos de forma permanente. Exporta antes de cerrar la página.';
-    try { this.parcelas = await Store.all(); } catch(e) { this.parcelas = []; }
+    // Fichas prediales y parcelas comparten el almacén; las fichas llevan tipo: 'predio'.
+    let todo = []; try { todo = await Store.all(); } catch(e) {}
+    this.predios = todo.filter(x => x.tipo === 'predio'); this.parcelas = todo.filter(x => x.tipo !== 'predio');
     // Parcelas creadas con la versión anterior (latitud/longitud) pasan a UTM WGS84.
     for (const p of this.parcelas) {
       if (p.lat != null && p.lon != null && p.este == null) {
@@ -999,32 +1074,97 @@ const App = {
       if (!['circular', 'cuadrada', 'rectangular', 'otra'].includes(p.forma)) p.forma = 'otra';
       if ('lat' in p || 'lon' in p) { delete p.lat; delete p.lon; await this.persist(p); }
     }
+    await this.asignarHuerfanas();
     this.bind();
-    this.show('list');
+    this.show('inicio');
     Cloud.init();
+  },
+  // Parcelas sin ficha predial (creadas antes de existir las fichas): quedan juntas en una ficha sin nombre para completarla.
+  async asignarHuerfanas(){
+    const h = this.parcelas.filter(p => !this.predios.some(f => f.id === p.predioId));
+    if (!h.length) return;
+    const f = this.crearPredio();
+    for (const p of h) { p.predioId = f.id; await this.persist(p); }
+    await this.persist(f);
+  },
+  crearPredio(){
+    const f = { id: newId(), tipo: 'predio', nombre: '', rol: '', region: this.settings.region || '', provincia: '', comuna: '', propietario: '', createdAt: Date.now() };
+    this.predios.push(f); return f;
   },
 
   async persist(p){ p.updatedAt = Date.now(); await Store.put(p); Cloud.mark(p.id); },
 
   show(v){
     this.view = v;
-    $('#vList').hidden = v !== 'list'; $('#vParcela').hidden = v !== 'parcela'; $('#vArbol').hidden = v !== 'arbol';
-    $('#btnBack').hidden = v === 'list';
+    $('#vInicio').hidden = v !== 'inicio'; $('#vPredio').hidden = v !== 'predio'; $('#vParcela').hidden = v !== 'parcela'; $('#vArbol').hidden = v !== 'arbol';
+    $('#btnBack').hidden = v === 'inicio';
     const p = this.parcela();
-    $('#barTitle').textContent = v === 'list' ? 'Parcelas de muestreo' : v === 'parcela' ? tituloParcela(p)
+    $('#barTitle').textContent = v === 'inicio' ? 'Parcelas de muestreo' : v === 'predio' ? tituloPredio(this.predio()) : v === 'parcela' ? tituloParcela(p)
       : (this.draft && this.draft.isNew ? 'Nuevo árbol' : 'Árbol N° ' + (this.draft ? this.draft.n : ''));
-    if (v === 'list') this.renderList();
+    if (v === 'inicio') this.renderInicio();
+    if (v === 'predio') this.renderPredio();
     if (v === 'parcela') this.renderParcela();
     window.scrollTo(0, 0);
   },
-  refresh(){ if (this.view === 'list') this.renderList(); else if (this.view === 'parcela') { this.renderParcela(); } },
+  refresh(){
+    if (this.view === 'inicio') this.renderInicio();
+    else if (this.view === 'predio') { if (this.predio()) this.renderList(); else this.show('inicio'); }
+    else if (this.view === 'parcela') this.renderParcela();
+  },
 
-  /* ----- lista ----- */
+  /* ----- inicio: fichas prediales ----- */
+  renderInicio(){
+    const L = [...this.predios].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    if (!L.length) {
+      $('#listaPredios').innerHTML = `<div class="empty"><h2>Aún no hay fichas prediales</h2>
+        <ol><li>Crea la ficha del predio: nombre, rol de avalúo, comuna, provincia, región y propietario.</li><li>Dentro del predio, crea las parcelas y registra sus árboles.</li><li>Exporta la planilla Excel y las fotos al terminar.</li></ol>
+        <div class="row"><button class="btn primary" data-act="nuevo">+ Crear la primera ficha predial</button></div></div>`;
+      return;
+    }
+    $('#listaPredios').innerHTML = L.map(f => {
+      const ps = this.parcelas.filter(p => p.predioId === f.id), na = ps.reduce((s, p) => s + p.arboles.length, 0);
+      const lugar = [f.comuna, f.region].filter(Boolean).join(', ');
+      return `<button class="pcard fcard" data-fid="${esc(f.id)}"><span class="fn">${esc(tituloPredio(f))}</span>
+        <span class="pmeta">${f.rol ? 'Rol ' + esc(f.rol) : 'Sin rol'}${lugar ? ' · ' + esc(lugar) : ''}${f.propietario ? ' · ' + esc(f.propietario) : ''}</span>
+        <span class="pstats"><span><b class="num">${ps.length}</b> parcela${ps.length === 1 ? '' : 's'}</span><span><b class="num">${na}</b> árbol${na === 1 ? '' : 'es'}</span></span></button>`;
+    }).join('');
+  },
+  async nuevoPredio(){
+    const f = this.crearPredio(); await this.persist(f);
+    this.predioCur = f.id; this.show('predio'); $('#fNombre').focus();
+  },
+
+  /* ----- ficha predial ----- */
+  renderPredio(){
+    const f = this.predio(); if (!f) return this.show('inicio');
+    $('#fNombre').value = f.nombre || ''; $('#fRol').value = f.rol || ''; $('#fPropietario').value = f.propietario || '';
+    this.renderTerritorio(); this.renderList();
+  },
+  // Región → provincia → comuna. Un valor que no calza con la lista (dato antiguo o escrito a mano) se conserva como opción.
+  renderTerritorio(){
+    const f = this.predio(), regs = TERRITORIO[f.region] || null, provs = regs && regs[f.provincia] || null;
+    const opts = (sel, vals, ph, v) => { sel.innerHTML = `<option value="">${ph}</option>` + [...(v && !vals.includes(v) ? [v] : []), ...vals].map(x => `<option${x === v ? ' selected' : ''}>${esc(x)}</option>`).join(''); };
+    opts($('#fRegion'), Object.keys(TERRITORIO), 'Elige la región', f.region);
+    opts($('#fProvincia'), regs ? Object.keys(regs) : [], regs ? 'Elige la provincia' : 'Primero la región', f.provincia);
+    opts($('#fComuna'), provs || [], provs ? 'Elige la comuna' : 'Primero la provincia', f.comuna);
+    $('#fProvincia').disabled = !regs && !f.provincia; $('#fComuna').disabled = !provs && !f.comuna;
+  },
+  setPredioField(k, v){
+    const f = this.predio(); if (!f) return;
+    f[k] = k === 'nombre' || k === 'rol' || k === 'propietario' ? v.trim() : v;
+    if (k === 'region') { f.provincia = ''; f.comuna = ''; this.settings.region = v; this.saveSettings(); }
+    if (k === 'provincia') f.comuna = '';
+    if (k === 'region' || k === 'provincia') this.renderTerritorio();
+    if (k === 'nombre') $('#barTitle').textContent = tituloPredio(f);
+    clearTimeout(this._ft); this._ft = setTimeout(() => this.persist(f), 400);
+  },
+
+  /* ----- parcelas del predio ----- */
   renderList(){
-    const L = [...this.parcelas].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    const L = this.parcelasPredio().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     $('#exportAll').hidden = !L.length;
     if (!L.length) {
-      $('#listaParcelas').innerHTML = `<div class="empty"><h2>Aún no hay parcelas</h2>
+      $('#listaParcelas').innerHTML = `<div class="empty"><h2>Aún no hay parcelas en este predio</h2>
         <ol><li>Crea una parcela con su número, coordenadas, forma y superficie.</li><li>Agrega cada árbol: especie, DAP, altura, estado sanitario y foto.</li><li>Exporta la planilla Excel y las fotos al terminar.</li></ol>
         <div class="row"><button class="btn primary" data-act="nueva">+ Crear la primera parcela</button><button class="btn ghost" data-act="ejemplo">Ver una parcela de ejemplo</button></div></div>`;
       return;
@@ -1038,14 +1178,14 @@ const App = {
   },
   async nuevaParcela(){
     const rodal = this.settings.rodal || '1';
-    const nums = this.parcelas.filter(p => String(p.rodal) === String(rodal)).map(p => parseInt(p.numero, 10)).filter(n => isFinite(n));
-    const p = { id: newId(), rodal, numero: String(nums.length ? Math.max(...nums) + 1 : 1), fecha: hoy(), este: null, norte: null, huso: this.settings.huso || 18, forma: this.settings.forma || 'circular', superficie: this.settings.superficie || null, arboles: [], createdAt: Date.now() };
+    const nums = this.parcelasPredio().filter(p => String(p.rodal) === String(rodal)).map(p => parseInt(p.numero, 10)).filter(n => isFinite(n));
+    const p = { id: newId(), predioId: this.predioCur, rodal, numero: String(nums.length ? Math.max(...nums) + 1 : 1), fecha: hoy(), este: null, norte: null, huso: this.settings.huso || 18, forma: this.settings.forma || 'circular', superficie: this.settings.superficie || null, arboles: [], createdAt: Date.now() };
     this.parcelas.push(p); await this.persist(p); this.cur = p.id; this.show('parcela');
     $('#pNumero').focus(); $('#pNumero').select();
   },
   async ejemplo(){
     const t = (n, sp, dap, alt, est, obs) => ({ id: newId(), n, especie: sp, dap, dapMetodo: 'Ejemplo', altura: alt, altMetodo: alt ? 'Ejemplo' : '', estado: est, fotoId: null, obs });
-    const p = { id: newId(), rodal: 'EJ', numero: '1', fecha: hoy(), este: 709438, norte: 5709774, huso: 18, forma: 'circular', superficie: 400, createdAt: Date.now(),
+    const p = { id: newId(), predioId: this.predioCur, rodal: 'EJ', numero: '1', fecha: hoy(), este: 709438, norte: 5709774, huso: 18, forma: 'circular', superficie: 400, createdAt: Date.now(),
       arboles: [ t(1,'Nothofagus obliqua',42.5,24.3,'Bueno','Dato de ejemplo'), t(2,'Nothofagus alpina',35.1,22.8,'Bueno','Dato de ejemplo'),
         t(3,'Nothofagus dombeyi',51.0,27.5,'Regular','Dato de ejemplo. Bifurcado a 8 m'), t(4,'Laurelia sempervirens',18.2,null,'Bueno','Dato de ejemplo'),
         t(5,'Aextoxicon punctatum',22.7,14.1,'Malo','Dato de ejemplo. Pudrición en base'), t(6,'Gevuina avellana',12.4,null,'Bueno','Dato de ejemplo') ] };
@@ -1055,7 +1195,7 @@ const App = {
 
   /* ----- parcela ----- */
   renderParcela(){
-    const p = this.parcela(); if (!p) return this.show('list');
+    const p = this.parcela(); if (!p) return this.show('predio');
     $('#pRodal').value = p.rodal || ''; $('#pNumero').value = p.numero || ''; $('#pFecha').value = p.fecha || '';
     $('#pEste').value = miles(p.este); $('#pNorte').value = miles(p.norte);
     $('#pForma').value = p.forma || 'circular'; $('#pSup').value = inVal(p.superficie, 1);
@@ -1270,7 +1410,20 @@ const App = {
 
   /* ----- eventos ----- */
   bind(){
-    $('#btnBack').onclick = () => { if (this.view === 'arbol') this.show('parcela'); else this.show('list'); };
+    $('#btnBack').onclick = () => this.show({ arbol: 'parcela', parcela: 'predio' }[this.view] || 'inicio');
+    $('#btnNuevoPredio').onclick = () => this.nuevoPredio();
+    $('#listaPredios').onclick = e => {
+      const c = e.target.closest('[data-fid]'); if (c) { this.predioCur = c.dataset.fid; this.show('predio'); return; }
+      if (e.target.closest('[data-act="nuevo"]')) this.nuevoPredio();
+    };
+    $$('#vPredio [data-pf]').forEach(inp => inp.addEventListener(inp.tagName === 'SELECT' ? 'change' : 'input', () => this.setPredioField(inp.dataset.pf, inp.value)));
+    $('#btnDelPredio').onclick = () => { const f = this.predio(), ps = this.parcelasPredio();
+      confirmar(`<h3>¿Eliminar la ficha de ${esc(tituloPredio(f))}?</h3><p class="fine">${ps.length ? `Se borran también sus ${ps.length} parcela${ps.length > 1 ? 's' : ''}, con sus árboles y fotos, de este teléfono y del respaldo. Exporta antes si necesitas los datos.` : 'El predio no tiene parcelas.'}</p>`, 'Eliminar', async () => {
+        for (const p of ps) { for (const a of p.arboles) await Store.delFoto(a.fotoId); await Store.del(p.id); Cloud.markDeleted(p.id); }
+        await Store.del(f.id); Cloud.markDeleted(f.id);
+        this.parcelas = this.parcelas.filter(p => p.predioId !== f.id); this.predios = this.predios.filter(x => x.id !== f.id);
+        this.predioCur = null; this.show('inicio'); toast('Ficha predial eliminada');
+      }); };
     $('#btnNuevaParcela').onclick = () => this.nuevaParcela();
     $('#listaParcelas').onclick = e => {
       const c = e.target.closest('[data-pid]'); if (c) { this.cur = c.dataset.pid; this.show('parcela'); return; }
@@ -1279,7 +1432,7 @@ const App = {
     $$('[data-export]').forEach(b => b.onclick = async () => {
       b.disabled = true;
       try {
-        if (b.dataset.scope === 'all') await exportar(b.dataset.export, this.parcelas, 'parcelas_' + hoy());
+        if (b.dataset.scope === 'all') await exportar(b.dataset.export, this.parcelasPredio(), 'predio_' + safeName(this.predio().nombre || 'sin_nombre') + '_' + hoy());
         else { const p = this.parcela(); await exportar(b.dataset.export, [p], 'rodal_' + safeName(p.rodal) + '_parcela_' + safeName(p.numero) + '_' + (p.fecha || hoy())); }
       } finally { b.disabled = false; }
     });
@@ -1296,7 +1449,7 @@ const App = {
       confirmar(`<h3>¿Eliminar ${esc(tituloParcela(p))}?</h3><p class="fine">Se borran sus ${p.arboles.length} árboles y fotos de este teléfono y del respaldo. Exporta antes si necesitas los datos.</p>`, 'Eliminar', async () => {
         for (const a of p.arboles) await Store.delFoto(a.fotoId);
         await Store.del(p.id); Cloud.markDeleted(p.id);
-        this.parcelas = this.parcelas.filter(x => x.id !== p.id); this.cur = null; this.show('list'); toast('Parcela eliminada');
+        this.parcelas = this.parcelas.filter(x => x.id !== p.id); this.cur = null; this.show('predio'); toast('Parcela eliminada');
       }); };
     $('#listaArboles').onclick = e => { const r = e.target.closest('[data-aid]'); if (r) this.abrirArbol(r.dataset.aid); };
     $('#btnNuevoArbol').onclick = () => this.abrirArbol(null);
