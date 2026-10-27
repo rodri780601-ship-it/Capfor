@@ -259,7 +259,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     <button class="btn wide" id="btnGraficos" hidden>Ver gráficos del predio</button>
     <div class="card panel" id="exportAll" hidden>
       <h3>Exportar las parcelas del predio</h3>
-      <p class="fine">La plantilla de inventario sigue el formato de la hoja “Inventario” (Rodal, Parcela, Árbol, Tipo, Especie, Dap, Extraer). La planilla completa agrega coordenadas, altura, estado sanitario, fotos y observaciones.</p>
+      <p class="fine">La plantilla de inventario sigue el formato de la hoja “Inventario” (Rodal, Parcela, Árbol, Tipo, Especie, Dap, Extraer) y agrega la hoja “Ficha predial”. La planilla completa agrega coordenadas, altura, estado sanitario, fotos y observaciones.</p>
       <div class="row">
         <button class="btn primary wide" data-export="plantilla" data-scope="all">Plantilla de inventario</button>
         <button class="btn wide" data-export="xlsx" data-scope="all">Planilla completa</button>
@@ -1028,6 +1028,29 @@ function filasPlantilla(lista){
   }
   return filas;
 }
+// Hoja "Ficha predial" (segunda pestaña, tras "Inventario"), con los estilos de la hoja Control de la plantilla:
+// 4 = título, 5 = encabezado verde, 6 = celda con borde, 9 = nota. Una columna de valores por predio.
+async function agregarHojaFicha(zip, fichas){
+  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships', WS = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
+  const campos = [['Nombre del predio', 'nombre'], ['Rol de avalúo', 'rol'], ['Región', 'region'], ['Provincia', 'provincia'], ['Comuna', 'comuna'], ['Propietario', 'propietario']];
+  const col = i => String.fromCharCode(66 + i), ult = col(fichas.length - 1);
+  const fila = (n, celdas) => `<row r="${n}">${celdas.join('')}</row>`;
+  const filas = [
+    fila(1, [celdaXML('A1', 4, 'Ficha predial')]),
+    fila(3, [celdaXML('A3', 5, 'Campo'), ...fichas.map((f, i) => celdaXML(col(i) + 3, 5, fichas.length > 1 ? 'Predio ' + (i + 1) : 'Valor'))]),
+    ...campos.map(([t, k], j) => fila(4 + j, [celdaXML('A' + (4 + j), 6, t), ...fichas.map((f, i) => celdaXML(col(i) + (4 + j), 6, f[k] || ''))])),
+    fila(11, [celdaXML('A11', 9, 'Datos de la ficha predial registrada en la aplicación Parcelas de Muestreo Forestal (exportado el ' + hoy().split('-').reverse().join('-') + ').')])
+  ];
+  zip.file('xl/worksheets/sheetFicha.xml', `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:${ult}11"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/>`
+    + `<cols><col min="1" max="1" width="24" customWidth="1"/><col min="2" max="${1 + fichas.length}" width="44" customWidth="1"/></cols><sheetData>${filas.join('')}</sheetData>`
+    + `<pageMargins left="0.75" right="0.75" top="1" bottom="1" header="0.5" footer="0.5"/></worksheet>`);
+  const wb = await zip.file('xl/workbook.xml').async('string');
+  zip.file('xl/workbook.xml', wb.replace(/(<sheet [^>]*r:id="rId1"\/>)/, `$1<sheet xmlns:r="${R}" name="Ficha predial" sheetId="5" state="visible" r:id="rIdFicha"/>`));
+  const rels = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+  zip.file('xl/_rels/workbook.xml.rels', rels.replace('</Relationships>', `<Relationship Type="${R}/worksheet" Target="/xl/worksheets/sheetFicha.xml" Id="rIdFicha"/></Relationships>`));
+  const ct = await zip.file('[Content_Types].xml').async('string');
+  zip.file('[Content_Types].xml', ct.replace('</Types>', `<Override PartName="/xl/worksheets/sheetFicha.xml" ContentType="${WS}"/></Types>`));
+}
 async function exportarPlantilla(lista, base){
   if (typeof JSZip === 'undefined') { toast('El módulo de Excel no cargó. Abre la app con conexión e intenta de nuevo.'); return; }
   const sinRodal = lista.filter(p => !String(p.rodal || '').trim());
@@ -1041,6 +1064,8 @@ async function exportarPlantilla(lista, base){
     return `<row r="${n}">` + ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((col, j) => celdaXML(col + n, j === 5 ? 3 : 2, f[j])).join('') + '</row>';
   });
   zip.file(ruta, xml);
+  const fichas = App.predios.filter(f => lista.some(p => p.predioId === f.id));
+  if (fichas.length) await agregarHojaFicha(zip, fichas);
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const fuera = [...new Set(lista.flatMap(p => p.arboles.map(a => a.especie)).filter(sci => sci && !NOMBRE_PLANTILLA[sci]))];
   await guardarArchivo(base + '_inventario.xlsx', blob);
