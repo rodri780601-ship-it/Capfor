@@ -6,7 +6,7 @@ con https (una sola vez) y luego instalarla desde Chrome en el teléfono.
 
 Archivos (súbelos todos, sin carpetas intermedias):
   index.html, sw.js, manifest.webmanifest, jszip.min.js,
-  icono-192.png, icono-512.png, icono-maskable-512.png
+  logo-minagri-conaf.svg, icono-192.png, icono-512.png, icono-maskable-512.png
 
 
 PASO 1 · Publicar la app con GitHub Pages (gratis, desde el computador)

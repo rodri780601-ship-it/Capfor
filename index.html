@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#182017">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16201C">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-192.png">
@@ -14,44 +14,52 @@
 <title>Parcelas de Muestreo Forestal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: herramienta de terreno a una columna; barra superior fija, acciones grandes al pie, colores de pintura de marcación forestal. */
+/* Layout: herramienta de terreno a una columna; barra superior fija, acciones grandes al pie.
+   Paleta y tipografía de la Oficina Virtual CONAF: verde #007111 (acciones), verde oscuro #004d40 (títulos), Montserrat. */
 :root{
-  --bg:#F4F6F1; --surface:#FFFFFF; --sunk:#EAEEE6; --ink:#18201A; --muted:#566457; --line:#D3DACE;
-  --accent:#C9440B; --accent-ink:#FFFFFF; --accent-soft:#FBE5D8;
-  --moss:#2E5C3A; --moss-soft:#DDEADF;
-  --ok:#2F7D3F; --warn:#A86A00; --bad:#B42318; --dead:#6B6F6A;
+  --bg:#F4F7F5; --surface:#FFFFFF; --sunk:#EDF2EF; --ink:#222222; --muted:#5B6862; --line:#D5DDD8;
+  --accent:#007111; --accent-ink:#FFFFFF; --accent-soft:#E9FFF4; --accent-hover:#00560C;
+  --brand:#004D40;
+  --moss:#004D40; --moss-soft:#DFF0EA;
+  --ok:#2D8F2F; --warn:#A86A00; --bad:#B42318; --dead:#6B6F6A;
   --photo-bg:#0C0F0B; --photo-ink:#F2F4EF;
-  --f-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
-  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-display:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --r:10px; --gutter-l:max(16px, env(safe-area-inset-left, 0px)); --gutter-r:max(16px, env(safe-area-inset-right, 0px));
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#10150F; --surface:#182017; --sunk:#0C110B; --ink:#E3E9DE; --muted:#9AA897; --line:#2C392A;
-  --accent:#FF7A3D; --accent-ink:#1A0C04; --accent-soft:#3A2114;
-  --moss:#86BC92; --moss-soft:#1F3324;
+  --bg:#0E1513; --surface:#16201C; --sunk:#0A100E; --ink:#E6ECE8; --muted:#9DABA4; --line:#2A3832;
+  --accent:#4CC26A; --accent-ink:#04210C; --accent-soft:#15301F; --accent-hover:#6FD487;
+  --brand:#7FD3BE;
+  --moss:#7FD3BE; --moss-soft:#173029;
   --ok:#6CC67E; --warn:#E5A83B; --bad:#F2776B; --dead:#9DA29B; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#10150F; --surface:#182017; --sunk:#0C110B; --ink:#E3E9DE; --muted:#9AA897; --line:#2C392A;
-  --accent:#FF7A3D; --accent-ink:#1A0C04; --accent-soft:#3A2114;
-  --moss:#86BC92; --moss-soft:#1F3324;
+  --bg:#0E1513; --surface:#16201C; --sunk:#0A100E; --ink:#E6ECE8; --muted:#9DABA4; --line:#2A3832;
+  --accent:#4CC26A; --accent-ink:#04210C; --accent-soft:#15301F; --accent-hover:#6FD487;
+  --brand:#7FD3BE;
+  --moss:#7FD3BE; --moss-soft:#173029;
   --ok:#6CC67E; --warn:#E5A83B; --bad:#F2776B; --dead:#9DA29B; color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
-h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1.1}
-h1{font-size:1.9rem} h2{font-size:1.3rem} h3{font-size:1.05rem}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;line-height:1.15;color:var(--brand)}
+h1{font-size:1.7rem} h2{font-size:1.15rem} h3{font-size:1rem}
 .num,td,.stat b{font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);
   display:flex;align-items:center;gap:10px;min-height:56px;padding-block:6px;padding-left:var(--gutter-l);padding-right:var(--gutter-r)}
-.bar-title{font-family:var(--f-display);font-weight:700;font-size:1.15rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-title{font-family:var(--f-display);font-weight:700;font-size:1.02rem;color:var(--brand);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Franja institucional: logo Ministerio de Agricultura – Gobierno de Chile y CONAF, siempre sobre blanco como en la Oficina Virtual. */
+.marca{background:#FFFFFF;border-bottom:1px solid #E0E6E2;padding-block:8px;padding-left:var(--gutter-l);padding-right:var(--gutter-r);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.marca img{height:52px;width:auto;display:block}
+.marca span{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#004D40;text-align:right;line-height:1.3}
 .back{border:0;background:none;padding:8px 6px 8px 0;font-weight:600;color:var(--accent);font-size:1rem;cursor:pointer;min-height:44px}
 .back.home{min-width:44px;padding:8px;display:inline-flex;align-items:center;justify-content:center}
 .chip{font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -68,6 +76,7 @@ section.view{display:flex;flex-direction:column;gap:18px;padding-bottom:28px}
 .btn{border:1.5px solid var(--line);background:var(--surface);border-radius:var(--r);padding:10px 14px;min-height:46px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+@media (hover:hover){.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}.btn:not(.primary):not(.danger):hover{border-color:var(--accent);color:var(--accent)}}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--bad);border-color:transparent;background:transparent}
 .btn.small{min-height:38px;padding:6px 10px;font-size:.92rem}
@@ -169,7 +178,7 @@ textarea.inp{min-height:84px;resize:vertical}
 .pm-panel .inp{background:#0c0f0b;border-color:#3a4238;color:#F2F4EF}
 .pm-panel .field>label{color:#b5c0b2}
 .pm-panel .btn{background:#222a20;border-color:#3a4238;color:#F2F4EF}
-.pm-panel .btn.primary{background:#FF7A3D;border-color:#FF7A3D;color:#1A0C04}
+.pm-panel .btn.primary{background:#4CC26A;border-color:#4CC26A;color:#04210C}
 .pm-res{font-family:var(--f-display);font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
 .pm-res small{font-family:var(--f-body);font-size:.85rem;font-weight:400;color:#b5c0b2;display:block}
 
@@ -179,6 +188,7 @@ textarea.inp{min-height:84px;resize:vertical}
 @media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease-out}@keyframes up{from{opacity:0;transform:translate(-50%,8px)}}}
 </style>
 
+<div class="marca"><img src="logo-minagri-conaf.svg" alt="Ministerio de Agricultura, Gobierno de Chile · CONAF" width="200" height="52"><span>Parcelas de<br>muestreo forestal</span></div>
 <header class="bar">
   <button class="back home" id="btnInicio" aria-label="Ir al inicio" title="Ir al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg></button>
   <button class="back" id="btnBack" hidden>‹ Volver</button>
@@ -396,7 +406,7 @@ textarea.inp{min-height:84px;resize:vertical}
 <!-- MEDICIÓN EN FOTO -->
 <div class="ov pm" id="ovFoto" hidden role="dialog" aria-label="Medición en foto">
   <div class="ov-head">
-    <button class="back" id="pmCancel" style="color:#FF7A3D">‹ Cancelar</button>
+    <button class="back" id="pmCancel" style="color:#4CC26A">‹ Cancelar</button>
     <div class="pm-step" id="pmStep"></div>
     <button class="btn small" id="pmReset" style="background:#222a20;border-color:#3a4238;color:#F2F4EF">Reiniciar</button>
   </div>
@@ -1578,7 +1588,7 @@ const PM = {
     P.forEach((p, i) => {
       g.fillStyle = c.colors[i]; g.strokeStyle = '#000'; g.lineWidth = 1.5;
       g.beginPath(); g.arc(p.x, p.y, 7, 0, Math.PI * 2); g.fill(); g.stroke();
-      g.font = '600 13px Barlow, system-ui, sans-serif'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.75)';
+      g.font = '600 13px Montserrat, system-ui, sans-serif'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.75)';
       g.strokeText(c.labels[i], p.x + 10, p.y - 10); g.fillText(c.labels[i], p.x + 10, p.y - 10);
     });
     $('#pmStep').textContent = this.pts.length < c.labels.length ? `${this.pts.length + 1}/${c.labels.length} · ${c.steps[this.pts.length]}` : 'Listo. Arrastra los puntos para afinar';
