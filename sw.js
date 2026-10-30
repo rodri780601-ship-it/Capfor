@@ -1,6 +1,6 @@
 // Caché sin conexión: la app abre desde el teléfono aunque no haya señal y se actualiza en segundo plano.
-const CACHE = 'parcelas-2026-10-30.1';
-const BASE = ['./', 'index.html', 'jszip.min.js', 'manifest.webmanifest', 'logo-minagri-conaf.svg', 'icono-192.png', 'icono-512.png', 'icono-maskable-512.png'];
+const CACHE = 'parcelas-2026-10-30.2';
+const BASE = ['./', 'index.html', 'jszip.min.js', 'manifest.webmanifest', 'logo-minagri-conaf.svg', 'icono-192.png', 'icono-512.png', 'icono-maskable-512.png', 'Manual_Parcelas_Muestreo_Forestal.pdf'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

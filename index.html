@@ -243,6 +243,10 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     <div id="listaPredios" class="plist"></div>
     <button class="btn ghost" id="btnPredioEjemplo">+ Crear un predio de ejemplo</button>
     <p class="fine" id="storageNote">Los datos se guardan en este teléfono. Exporta a Excel al terminar cada jornada.</p>
+    <div class="card panel">
+      <div style="display:flex;flex-direction:column;gap:6px"><h3>Manual de uso</h3><p class="fine">Guía paso a paso de la aplicación: predios, parcelas, árboles, mediciones, gráficos y exportación.</p></div>
+      <button class="btn" id="btnManual">Descargar manual (PDF)</button>
+    </div>
   </section>
 
   <!-- FICHA PREDIAL Y SUS PARCELAS -->
@@ -960,6 +964,7 @@ const Cloud = {
 };
 
 /* ---------- archivos ---------- */
+const MANUAL_PDF = 'Manual_Parcelas_Muestreo_Forestal.pdf';
 const dlPromise = (window.claude && window.claude.use) ? claude.use('downloads') : Promise.resolve(null);
 async function guardarArchivo(nombre, blob){
   const dl = await dlPromise;
@@ -1843,6 +1848,12 @@ const App = {
     $('#btnInicio').onclick = () => this.irA('inicio');
     $('#btnNuevoPredio').onclick = () => this.nuevoPredio();
     $('#btnPredioEjemplo').onclick = () => this.predioEjemplo();
+    $('#btnManual').onclick = async () => {
+      const b = $('#btnManual'); b.disabled = true;
+      try { const r = await fetch(MANUAL_PDF); if (!r.ok) throw 0; await guardarArchivo(MANUAL_PDF, await r.blob()); }
+      catch(e) { toast('No se pudo descargar el manual. Abre la app con conexión e intenta de nuevo.'); }
+      finally { b.disabled = false; }
+    };
     $('#listaPredios').onclick = e => {
       const c = e.target.closest('[data-fid]'); if (c) { this.predioCur = c.dataset.fid; this.show('predio'); return; }
       if (e.target.closest('[data-act="nuevo"]')) this.nuevoPredio();
