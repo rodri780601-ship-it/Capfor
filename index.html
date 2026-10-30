@@ -111,6 +111,12 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:14px
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field>label,.lbl{font-size:.82rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
 .req{color:var(--bad);font-weight:700;margin-left:2px}
+.opt>summary{list-style:none;cursor:pointer;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.opt>summary::-webkit-details-marker{display:none}
+.opt>summary>span:first-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.opt .chev{font-size:1.4rem;color:var(--muted);transition:transform .15s}
+.opt[open] .chev{transform:rotate(90deg)}
+.opt-body{display:flex;flex-direction:column;gap:18px;margin-top:18px}
 .inp{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);padding:10px 12px;font-size:1.05rem}
 .inp:focus{border-color:var(--accent);outline:none}
 textarea.inp{min-height:84px;resize:vertical}
@@ -352,7 +358,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
         <span class="lbl">Especie (D.S. N° 68/2009)<span class="req" aria-hidden="true">*</span></span>
         <button type="button" class="sp-btn" id="aEspecie" aria-required="true"></button>
       </div>
-      <p class="fine"><span class="req" aria-hidden="true">*</span> Campo obligatorio, aunque se complete automáticamente. Altura total, estado sanitario, extraer y foto son opcionales.</p>
+      <p class="fine"><span class="req" aria-hidden="true">*</span> Campo obligatorio, aunque se complete automáticamente. Altura total, estado sanitario, extracción y foto son opcionales: están en “Datos opcionales”.</p>
     </div>
 
     <div class="card panel">
@@ -375,8 +381,11 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
       <button type="button" class="btn small" id="btnAddVastago">+ Agregar vástago</button>
     </div>
 
+    <details class="opt" id="aOpcionales">
+    <summary class="card"><span><h2>Datos opcionales</h2><span class="fine">Altura total, estado sanitario, extracción, foto y observaciones</span></span><span class="chev" aria-hidden="true">›</span></summary>
+    <div class="opt-body">
     <div class="card panel">
-      <div class="spread"><h2>Altura total</h2><span class="fine">Opcional <span class="method" id="aAltMet"></span></span></div>
+      <div class="spread"><h2>Altura total</h2><span class="method" id="aAltMet"></span></div>
       <div class="field"><label for="aAlt">Altura</label><div class="unit"><input class="inp big" id="aAlt" inputmode="decimal"><span>m</span></div></div>
       <div class="tools">
         <button type="button" class="btn small" data-tool="clino">Clinómetro</button>
@@ -399,7 +408,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <div class="spread"><h2>Estado sanitario</h2><span class="fine">Opcional</span></div>
+      <h2>Estado sanitario</h2>
       <div class="chips" id="aEstado">
         <button type="button" data-e="Bueno" aria-pressed="false"><span class="dot st-Bueno"></span>Bueno</button>
         <button type="button" data-e="Regular" aria-pressed="false"><span class="dot st-Regular"></span>Regular</button>
@@ -409,7 +418,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <div class="spread"><h2>Extraer</h2><span class="fine">Opcional · marcación de corta</span></div>
+      <div class="spread"><h2>Extracción</h2><span class="fine">Marcación de corta</span></div>
       <div class="chips" id="aExtraer">
         <button type="button" data-x="S" aria-pressed="false">S · Se corta</button>
         <button type="button" data-x="N" aria-pressed="false">N · Queda en pie</button>
@@ -417,7 +426,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <div class="spread"><h2>Foto</h2><span class="fine">Opcional</span></div>
+      <h2>Foto</h2>
       <div class="photo-box">
         <img id="aFotoImg" alt="Foto del árbol" hidden>
         <div class="row">
@@ -427,8 +436,11 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
         </div>
       </div>
       <div class="field"><label for="aObs">Observaciones</label><textarea class="inp" id="aObs" placeholder="Bifurcado, daño en fuste, presencia de hongos…"></textarea></div>
-      <button type="button" class="btn danger" id="btnDelArbol" hidden>Eliminar árbol</button>
     </div>
+    </div>
+    </details>
+
+    <button type="button" class="btn danger" id="btnDelArbol" hidden>Eliminar árbol</button>
 
     <div class="sticky-act">
       <button class="btn wide" id="btnGuardarArbol">Guardar</button>
@@ -1730,6 +1742,7 @@ const App = {
     $('#cTop').value = ''; $('#cBase').value = ''; $('#cDist').value = this.settings.clinoD || '';
     this.setClinoU(this.settings.clinoU); this.setBaseDir('bajo'); this.calcClino(true);
     $('#btnDelArbol').hidden = d.isNew;
+    $('#aOpcionales').open = !!(d.altura || d.estado || d.extraer || d.fotoId || d.obs);   // abierto si el árbol ya trae datos opcionales
     this.renderEspecieBtn(); this.renderMetodos(); this.renderEstado(); this.renderExtraer(); this.renderVastagos();
     await this.renderFoto();
     this.firma0 = this.firmaArbol();
