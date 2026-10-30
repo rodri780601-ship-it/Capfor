@@ -352,7 +352,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
         <span class="lbl">Especie (D.S. N° 68/2009)<span class="req" aria-hidden="true">*</span></span>
         <button type="button" class="sp-btn" id="aEspecie" aria-required="true"></button>
       </div>
-      <p class="fine"><span class="req" aria-hidden="true">*</span> Campo obligatorio, aunque se complete automáticamente.</p>
+      <p class="fine"><span class="req" aria-hidden="true">*</span> Campo obligatorio, aunque se complete automáticamente. Altura total, estado sanitario, extraer y foto son opcionales.</p>
     </div>
 
     <div class="card panel">
@@ -376,7 +376,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <div class="spread"><h2>Altura total</h2><span class="method" id="aAltMet"></span></div>
+      <div class="spread"><h2>Altura total</h2><span class="fine">Opcional <span class="method" id="aAltMet"></span></span></div>
       <div class="field"><label for="aAlt">Altura</label><div class="unit"><input class="inp big" id="aAlt" inputmode="decimal"><span>m</span></div></div>
       <div class="tools">
         <button type="button" class="btn small" data-tool="clino">Clinómetro</button>
@@ -399,7 +399,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <h2>Estado sanitario</h2>
+      <div class="spread"><h2>Estado sanitario</h2><span class="fine">Opcional</span></div>
       <div class="chips" id="aEstado">
         <button type="button" data-e="Bueno" aria-pressed="false"><span class="dot st-Bueno"></span>Bueno</button>
         <button type="button" data-e="Regular" aria-pressed="false"><span class="dot st-Regular"></span>Regular</button>
@@ -417,7 +417,7 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
     </div>
 
     <div class="card panel">
-      <h2>Foto</h2>
+      <div class="spread"><h2>Foto</h2><span class="fine">Opcional</span></div>
       <div class="photo-box">
         <img id="aFotoImg" alt="Foto del árbol" hidden>
         <div class="row">
