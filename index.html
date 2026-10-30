@@ -110,6 +110,7 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:14px
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field>label,.lbl{font-size:.82rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.req{color:var(--bad);font-weight:700;margin-left:2px}
 .inp{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);padding:10px 12px;font-size:1.05rem}
 .inp:focus{border-color:var(--accent);outline:none}
 textarea.inp{min-height:84px;resize:vertical}
@@ -344,18 +345,19 @@ table.data td.num,table.data th.num{text-align:right;white-space:nowrap}
   <section class="view" id="vArbol" hidden>
     <div class="card panel">
       <div class="grid2">
-        <div class="field"><label for="aNum">N° de árbol</label><input class="inp big" id="aNum" inputmode="numeric"></div>
-        <div class="field"><span class="lbl">Parcela</span><div class="inp big" id="aParcela" style="background:var(--sunk)"></div></div>
+        <div class="field"><label for="aNum">N° de árbol<span class="req" aria-hidden="true">*</span></label><input class="inp big" id="aNum" inputmode="numeric" required aria-required="true"></div>
+        <div class="field"><span class="lbl">Parcela<span class="req" aria-hidden="true">*</span></span><div class="inp big" id="aParcela" style="background:var(--sunk)"></div></div>
       </div>
       <div class="field">
-        <span class="lbl">Especie (D.S. N° 68/2009)</span>
-        <button type="button" class="sp-btn" id="aEspecie"></button>
+        <span class="lbl">Especie (D.S. N° 68/2009)<span class="req" aria-hidden="true">*</span></span>
+        <button type="button" class="sp-btn" id="aEspecie" aria-required="true"></button>
       </div>
+      <p class="fine"><span class="req" aria-hidden="true">*</span> Campo obligatorio, aunque se complete automáticamente.</p>
     </div>
 
     <div class="card panel">
       <div class="spread"><h2>DAP</h2><span class="method" id="aDapMet"></span></div>
-      <div class="field"><label for="aDap">Diámetro a 1,3 m</label><div class="unit"><input class="inp big" id="aDap" inputmode="decimal"><span>cm</span></div></div>
+      <div class="field"><label for="aDap">Diámetro a 1,3 m<span class="req" aria-hidden="true">*</span></label><div class="unit"><input class="inp big" id="aDap" inputmode="decimal" required aria-required="true"><span>cm</span></div></div>
       <div class="tools">
         <button type="button" class="btn small" data-tool="cap">Desde CAP</button>
         <button type="button" class="btn small" data-tool="dapfoto">Medir en foto</button>
@@ -1781,7 +1783,7 @@ const App = {
     const n = parseInt($('#aNum').value, 10);
     if (!isFinite(n) || n < 1) { toast('Ingresa el número del árbol'); $('#aNum').focus(); return; }
     if (p.arboles.some(a => a.n === n && a.id !== d.id)) { toast('Ya existe el árbol N° ' + n + ' en esta parcela'); $('#aNum').focus(); return; }
-    if (!d.especie) { toast('Elige la especie'); return; }
+    if (!d.especie) { toast('Elige la especie'); $('#aEspecie').focus(); return; }
     const dap = num($('#aDap').value);
     if (!(dap > 0)) { toast('Ingresa el DAP'); $('#aDap').focus(); return; }
     const vast = d.vastagos.filter(v => v.dap != null || v.extraer);   // filas agregadas y dejadas en blanco se descartan
